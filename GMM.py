@@ -29,7 +29,7 @@ class GMM:
         else:
             self.means = []
             for i in range(self.K):
-                mean = np.random.rand()*10
+                mean = np.random.rand()
                 self.means.append(mean)
             print(self.means)
 
@@ -38,7 +38,7 @@ class GMM:
         else:
             self.vars = []
             for i in range(self.K):
-                var = np.random.rand()*10
+                var = np.random.rand()*100
                 self.vars.append(var)
 
     def Gaussian(self, x, mean, var):
@@ -56,11 +56,10 @@ class GMM:
         loglikelyhood = 0
         oldloglikelyhood = 1
         len = np.shape(self.Data)[0]
-        dim = 1
         # gamma表示第n个样本属于第k个混合高斯的概率
         gammas = [np.zeros(self.K) for i in range(len)]
-        while np.abs(loglikelyhood - oldloglikelyhood) > 0.001:
-            print(np.abs(loglikelyhood - oldloglikelyhood))
+        while np.abs(loglikelyhood - oldloglikelyhood) > 0.00001:
+            # print(np.abs(loglikelyhood - oldloglikelyhood))
             oldloglikelyhood = loglikelyhood
             # E-step
             for n in range(len):
@@ -68,19 +67,24 @@ class GMM:
                 respons = [self.weights[k] * self.Gaussian(self.Data[n], self.means[k], self.vars[k])
                            for k in range(self.K)]
                 respons = np.array(respons)
+
                 sum_respons = np.sum(respons)
                 gammas[n] = respons / sum_respons
+
             # M-step
             for k in range(self.K):
                 # nk表示N个样本中有多少属于第k个高斯
                 nk = np.sum([gammas[n][k] for n in range(len)])
+
                 # 更新每个高斯分布的概率
                 self.weights[k] = 1.0 * nk / len
                 # 更新高斯分布的均值
                 self.means[k] = (1.0 / nk) * np.sum([gammas[n][k] * self.Data[n] for n in range(len)])
+
                 xdiffs = self.Data - self.means[k]
                 # 更新高斯分布的方差
                 self.vars[k] = (1.0 / nk) * np.sum([gammas[n][k] * xdiffs[n] * xdiffs[n] for n in range(len)])
+
 
             loglikelyhood1 = []
 
@@ -88,8 +92,8 @@ class GMM:
                 tmp = [np.sum(self.weights[k] * self.Gaussian(self.Data[n], self.means[k], self.vars[k])) for k in range(self.K)]
                 tmp = np.log(np.array(tmp))
                 loglikelyhood1.append(list(tmp))
-            loglikelyhood = np.sum(loglikelyhood1) / len
-
+            loglikelyhood = np.sum(loglikelyhood1)
+            print(loglikelyhood)
         for i in range(len):
             gammas[i] = gammas[i] / np.sum(gammas[i])
 
