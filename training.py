@@ -10,7 +10,7 @@ from models import *
 from predict_edge import Net
 import torch
 from math import log
-from torch_geometric.datasets import WikipediaNetwork, Actor
+from torch_geometric.datasets import WikipediaNetwork, Actor, Coauthor
 import datetime
 import numpy as np
 import matplotlib.pyplot as plt
@@ -20,10 +20,11 @@ from GMM import GMM
 
 if __name__ == '__main__':
     '''载入data'''
-    dataset = WikipediaNetwork(root = "/data/squirrel", name = "squirrel")
+    # dataset = WikipediaNetwork(root = "/data/squirrel", name = "squirrel")
     # dataset = WikipediaNetwork(root="/data/chameleon", name="chameleon")
     # dataset = Actor(root="/data/actor")
     # dataset = DataLoader("cora")
+    dataset = Coauthor(root="/data/physics", name='Physics')
 
     data = dataset[0]
     print(dataset.data)
@@ -34,9 +35,9 @@ if __name__ == '__main__':
         iclass = dataset.data.y[i]
         jclass = dataset.data.y[j]
         if iclass == jclass:
-            return 0  # heterophilic
+            return 0  # homophilic
         else:
-            return 1  # homophilic
+            return 1  # heterophilic
 
 
     def floatrange(start, stop, steps):
@@ -59,7 +60,7 @@ if __name__ == '__main__':
         if data2 == None:
             mindata = min(data)
             maxdata = max(data)
-            bins_interval = (maxdata - mindata) / 1000
+            bins_interval = (maxdata - mindata) / 30
             bins = floatrange(mindata, maxdata + bins_interval, bins_interval)
             plt.xlim(mindata, maxdata)
             plt.title("probability-distribution")
@@ -74,7 +75,7 @@ if __name__ == '__main__':
             maxdata2 = max(data2)
             mindata = min(mindata1, mindata2)
             maxdata = max(maxdata1, maxdata2)
-            bins_interval = (maxdata - mindata) / 1000
+            bins_interval = (maxdata - mindata) / 30
             bins = floatrange(mindata, maxdata + bins_interval, bins_interval)
             plt.xlim(mindata, maxdata)
             plt.title("probability-distribution")
@@ -92,7 +93,7 @@ if __name__ == '__main__':
         else:
             label1 = [0, 1]
         temp = [-log(score), -log(1 - score)]
-        celoss = label1[0] * temp[0] + label1[1] * temp[1] + score * log(score)
+        celoss = label1[0] * temp[0] + label1[1] * temp[1]
         return celoss
 
 
@@ -105,6 +106,9 @@ if __name__ == '__main__':
         edge_label = train_data.edge_label
         out = model.decode(z, edge_label_index).view(-1)
         out_sigmoid = out.sigmoid()
+        penalty = 0
+        for i in range(len(out)):
+            penalty += out_sigmoid[i] * log(out_sigmoid[i])
         out_sigmoid = out_sigmoid.detach()
         edge_label.detach()
         for i in range(int(len(out) / 2)):
@@ -115,7 +119,7 @@ if __name__ == '__main__':
             loss_list.append(celoss1(out_sigmoid[i], edge_label[i]))
 
         loss_list = np.array(loss_list)
-        loss = criterion(out, edge_label)
+        loss = criterion(out, edge_label) + 0.001*penalty
         loss.backward()
         optimizer.step()
         return loss, loss_list
@@ -206,7 +210,7 @@ if __name__ == '__main__':
         for i in range(int(len(out) / 2)):
             a = train_data.edge_label_index[0][i]
             b = train_data.edge_label_index[1][i]
-            if node_class_query(a, b, dataset) == 1:
+            if node_class_query(a, b, dataset) == 0:
                 homo.append(loss2[i])
             else:
                 hetero.append(loss2[i])
