@@ -31,6 +31,7 @@ if __name__ == '__main__':
     device = torch.device('cpu')
 
 
+
     def node_class_query(i, j, dataset):
         iclass = dataset.data.y[i]
         jclass = dataset.data.y[j]
