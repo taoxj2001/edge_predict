@@ -21,6 +21,7 @@ class GCN_Net(torch.nn.Module):
         self.conv2 = GCNConv(args.hidden, dataset.num_classes)
         self.dropout = args.dropout
 
+
     def reset_parameters(self):
         self.conv1.reset_parameters()
         self.conv2.reset_parameters()

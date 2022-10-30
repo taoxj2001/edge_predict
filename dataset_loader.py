@@ -86,6 +86,7 @@ class dataset_heterophily(InMemoryDataset):
 
 class WebKB(InMemoryDataset):
 
+
     url = ('https://raw.githubusercontent.com/graphdml-uiuc-jlu/geom-gcn/'
            'master/new_data')
 

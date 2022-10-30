@@ -12,6 +12,7 @@ class Net(torch.nn.Module):
         self.lin2 = Linear(hidden_channels, out_channels)
         self.dropout = 0.5
 
+
     def encode(self, x):
         x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.lin1(x)
